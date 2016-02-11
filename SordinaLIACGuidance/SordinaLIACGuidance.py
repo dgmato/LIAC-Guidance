@@ -18,7 +18,7 @@ class SordinaLIACGuidance(ScriptedLoadableModule):
     self.parent.title = "SordinaLIACGuidance" # TODO make this more human readable by adding spaces
     self.parent.categories = ["Examples"]
     self.parent.dependencies = []
-    self.parent.contributors = ["John Doe (AnyWare Corp.)"] # replace with "Firstname Lastname (Organization)"
+    self.parent.contributors = ["Eugenio Marinetto (LIM)"] # replace with "Firstname Lastname (Organization)"
     self.parent.helpText = """
     This is an example of scripted loadable module bundled in an extension.
     It performs a simple thresholding on the input volume and optionally captures a screenshot.
@@ -40,80 +40,141 @@ class SordinaLIACGuidanceWidget(ScriptedLoadableModuleWidget):
   def setup(self):
     ScriptedLoadableModuleWidget.setup(self)
 
-    # Instantiate and connect widgets ...
+    logic = SordinaLIACGuidanceLogic()
+
+    ########################################################
+    ############# Transform Definition Area ################
+    ########################################################
+    transformsCollapsibleButton = ctk.ctkCollapsibleButton()
+    transformsCollapsibleButton.text = "Transform Definition"
+    self.layout.addWidget(transformsCollapsibleButton)
+    parametersFormLayout = qt.QFormLayout(transformsCollapsibleButton)
+
+    # PointerTipToPointer transform selector
+    self.pointerTipToPointerSelector = slicer.qMRMLNodeComboBox()
+    self.pointerTipToPointerSelector.nodeTypes = ( ("vtkMRMLLinearTransformNode"), "" )
+    self.pointerTipToPointerSelector.selectNodeUponCreation = True
+    self.pointerTipToPointerSelector.addEnabled = False
+    self.pointerTipToPointerSelector.removeEnabled = False
+    self.pointerTipToPointerSelector.noneEnabled = False
+    self.pointerTipToPointerSelector.showHidden = False
+    self.pointerTipToPointerSelector.showChildNodeTypes = False
+    self.pointerTipToPointerSelector.setMRMLScene( slicer.mrmlScene )
+    self.pointerTipToPointerSelector.setToolTip( "Pick the PointerTipToPointer transform." )
+    parametersFormLayout.addRow("PointerTipToPointer transform: ", self.pointerTipToPointerSelector)
+ 
+    # NeedleTipToNeedle transform selector
+    self.needleTipToNeedleSelector = slicer.qMRMLNodeComboBox()
+    self.needleTipToNeedleSelector.nodeTypes = ( ("vtkMRMLLinearTransformNode"), "" )
+    self.needleTipToNeedleSelector.selectNodeUponCreation = True
+    self.needleTipToNeedleSelector.addEnabled = False
+    self.needleTipToNeedleSelector.removeEnabled = False
+    self.needleTipToNeedleSelector.noneEnabled = False
+    self.needleTipToNeedleSelector.showHidden = False
+    self.needleTipToNeedleSelector.showChildNodeTypes = False
+    self.needleTipToNeedleSelector.setMRMLScene( slicer.mrmlScene )
+    self.needleTipToNeedleSelector.setToolTip( "Pick the NeedleTipToNeedle transform." )
+    parametersFormLayout.addRow("NeedleTipToNeedle transform: ", self.needleTipToNeedleSelector)
+
+    ########################################################
+    ################## Calibration Area ####################
+    ########################################################
+    calibrationCollapsibleButton = ctk.ctkCollapsibleButton()
+    calibrationCollapsibleButton.text = "Calibration"
+    self.layout.addWidget(calibrationCollapsibleButton)
+    parametersFormLayout = qt.QFormLayout(calibrationCollapsibleButton)
 
     #
-    # Parameters Area
+    # Icons retrieval
     #
-    parametersCollapsibleButton = ctk.ctkCollapsibleButton()
-    parametersCollapsibleButton.text = "Parameters"
-    self.layout.addWidget(parametersCollapsibleButton)
-
-    # Layout within the dummy collapsible button
-    parametersFormLayout = qt.QFormLayout(parametersCollapsibleButton)
-
-    #
-    # input volume selector
-    #
-    self.inputSelector = slicer.qMRMLNodeComboBox()
-    self.inputSelector.nodeTypes = ["vtkMRMLScalarVolumeNode"]
-    self.inputSelector.selectNodeUponCreation = True
-    self.inputSelector.addEnabled = False
-    self.inputSelector.removeEnabled = False
-    self.inputSelector.noneEnabled = False
-    self.inputSelector.showHidden = False
-    self.inputSelector.showChildNodeTypes = False
-    self.inputSelector.setMRMLScene( slicer.mrmlScene )
-    self.inputSelector.setToolTip( "Pick the input to the algorithm." )
-    parametersFormLayout.addRow("Input Volume: ", self.inputSelector)
+    sordinaLIACGuidanceModuleDirectoryPath = slicer.modules.sordinaliacguidance.path.replace("SordinaLIACGuidance.py","")
+    recordIcon = qt.QIcon(sordinaLIACGuidanceModuleDirectoryPath + '/Resources/Icons/recordIcon.png')
+    stopIcon = qt.QIcon(sordinaLIACGuidanceModuleDirectoryPath + '/Resources/Icons/stopIcon.png')
+    restartIcon = qt.QIcon(sordinaLIACGuidanceModuleDirectoryPath + '/Resources/Icons/restartIcon.png')
+    saveIcon = qt.QIcon(sordinaLIACGuidanceModuleDirectoryPath + '/Resources/Icons/saveIcon.png')    
 
     #
-    # output volume selector
+    # Up-down movement recording
     #
-    self.outputSelector = slicer.qMRMLNodeComboBox()
-    self.outputSelector.nodeTypes = ["vtkMRMLScalarVolumeNode"]
-    self.outputSelector.selectNodeUponCreation = True
-    self.outputSelector.addEnabled = True
-    self.outputSelector.removeEnabled = True
-    self.outputSelector.noneEnabled = True
-    self.outputSelector.showHidden = False
-    self.outputSelector.showChildNodeTypes = False
-    self.outputSelector.setMRMLScene( slicer.mrmlScene )
-    self.outputSelector.setToolTip( "Pick the output to the algorithm." )
-    parametersFormLayout.addRow("Output Volume: ", self.outputSelector)
+    upDownMovementGroupBox = ctk.ctkCollapsibleGroupBox()
+    upDownMovementGroupBox.setTitle("Up-Down Movement")
+    upDownMovementGroupBoxFormLayout = qt.QFormLayout(upDownMovementGroupBox)
+    parametersFormLayout.addRow(upDownMovementGroupBox)
+  
+    upDownMovementLayout = qt.QHBoxLayout()
+    upDownMovementGroupBoxFormLayout.addRow(upDownMovementLayout)
+
+    self.upDownRecordButton = qt.QPushButton(" Record")
+    self.upDownRecordButton.setIcon(recordIcon)
+    self.upDownRecordButton.enabled = True
+    upDownMovementLayout.addWidget(self.upDownRecordButton)
+    # upDownMovementGroupBoxFormLayout.addRow(self.upDownRecordButton)
+
+    self.upDownStopButton = qt.QPushButton(" Stop")
+    self.upDownStopButton.setIcon(stopIcon)
+    self.upDownStopButton.enabled = False
+    upDownMovementLayout.addWidget(self.upDownStopButton)
+    # upDownMovementGroupBoxFormLayout.addRow(self.upDownStopButton)
+
+    self.upDownRestartButton = qt.QPushButton(" Restart")
+    self.upDownRestartButton.setIcon(restartIcon)
+    self.upDownRestartButton.enabled = False
+    upDownMovementLayout.addWidget(self.upDownRestartButton)
+    # upDownMovementGroupBoxFormLayout.addRow(self.upDownRestartButton)
 
     #
-    # threshold value
+    # Roll movement recording
     #
-    self.imageThresholdSliderWidget = ctk.ctkSliderWidget()
-    self.imageThresholdSliderWidget.singleStep = 0.1
-    self.imageThresholdSliderWidget.minimum = -100
-    self.imageThresholdSliderWidget.maximum = 100
-    self.imageThresholdSliderWidget.value = 0.5
-    self.imageThresholdSliderWidget.setToolTip("Set threshold value for computing the output image. Voxels that have intensities lower than this value will set to zero.")
-    parametersFormLayout.addRow("Image threshold", self.imageThresholdSliderWidget)
+    rollMovementGroupBox = ctk.ctkCollapsibleGroupBox()
+    rollMovementGroupBox.setTitle("Roll Movement")
+    rollMovementGroupBoxFormLayout = qt.QFormLayout(rollMovementGroupBox)
+    parametersFormLayout.addRow(rollMovementGroupBox)
 
-    #
-    # check box to trigger taking screen shots for later use in tutorials
-    #
-    self.enableScreenshotsFlagCheckBox = qt.QCheckBox()
-    self.enableScreenshotsFlagCheckBox.checked = 0
-    self.enableScreenshotsFlagCheckBox.setToolTip("If checked, take screen shots for tutorials. Use Save Data to write them to disk.")
-    parametersFormLayout.addRow("Enable Screenshots", self.enableScreenshotsFlagCheckBox)
+    rollMovementLayout = qt.QHBoxLayout()
+    rollMovementGroupBoxFormLayout.addRow(rollMovementLayout)
+  
+    self.rollRecordButton = qt.QPushButton(" Record")
+    self.rollRecordButton.setIcon(recordIcon)
+    self.rollRecordButton.enabled = True
+    rollMovementLayout.addWidget(self.rollRecordButton)
+    # rollMovementGroupBoxFormLayout.addRow(self.rollRecordButton)
 
-    #
-    # Apply Button
-    #
-    self.applyButton = qt.QPushButton("Apply")
-    self.applyButton.toolTip = "Run the algorithm."
-    self.applyButton.enabled = False
-    parametersFormLayout.addRow(self.applyButton)
+    self.rollStopButton = qt.QPushButton(" Stop")
+    self.rollStopButton.setIcon(stopIcon)
+    self.rollStopButton.enabled = False
+    rollMovementLayout.addWidget(self.rollStopButton)
+    # rollMovementGroupBoxFormLayout.addRow(self.rollStopButton)
+
+    self.rollRestartButton = qt.QPushButton(" Restart")
+    self.rollRestartButton.setIcon(restartIcon)
+    self.rollRestartButton.enabled = False
+    rollMovementLayout.addWidget(self.rollRestartButton)
+    # rollMovementGroupBoxFormLayout.addRow(self.rollRestartButton)
+
+    #########################################################
+    #################### Guidance Area ######################
+    #########################################################
+    guidanceCollapsibleButton = ctk.ctkCollapsibleButton()
+    guidanceCollapsibleButton.text = "Guidance"
+    self.layout.addWidget(guidanceCollapsibleButton)
+    parametersFormLayout = qt.QFormLayout(guidanceCollapsibleButton)
+
+    # Load Models Button
+    self.loadModelsButton = qt.QPushButton()
+    self.loadModelsButton.toolTip = "Soft tissue visibility."
+    self.loadModelsButton.enabled = True
+    self.loadModelsButton.text = "Load 3D Models"
+    parametersFormLayout.addRow(self.loadModelsButton)
 
     # connections
-    self.applyButton.connect('clicked(bool)', self.onApplyButton)
-    self.inputSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
-    self.outputSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
-
+    self.upDownRecordButton.connect('clicked(bool)', self.onUpDownRecordButton)
+    self.upDownStopButton.connect('clicked(bool)', self.onUpDownStopButton)
+    self.upDownRestartButton.connect('clicked(bool)', self.onUpDownRestartButton)
+    self.rollRecordButton.connect('clicked(bool)', self.onRollRecordButton)
+    self.rollStopButton.connect('clicked(bool)', self.onRollStopButton)
+    self.rollRestartButton.connect('clicked(bool)', self.onRollRestartButton)
+    
+    
     # Add vertical spacer
     self.layout.addStretch(1)
 
@@ -124,13 +185,40 @@ class SordinaLIACGuidanceWidget(ScriptedLoadableModuleWidget):
     pass
 
   def onSelect(self):
-    self.applyButton.enabled = self.inputSelector.currentNode() and self.outputSelector.currentNode()
+    pass
 
-  def onApplyButton(self):
-    logic = SordinaLIACGuidanceLogic()
-    enableScreenshotsFlag = self.enableScreenshotsFlagCheckBox.checked
-    imageThreshold = self.imageThresholdSliderWidget.value
-    logic.run(self.inputSelector.currentNode(), self.outputSelector.currentNode(), imageThreshold, enableScreenshotsFlag)
+  def onUpDownRecordButton(self):
+    self.upDownRecordButton.enabled = False
+    self.upDownStopButton.enabled = True
+    self.upDownRestartButton.enabled = False
+    
+
+  def onUpDownStopButton(self):
+    self.upDownRecordButton.enabled = False
+    self.upDownStopButton.enabled = False
+    self.upDownRestartButton.enabled = True
+    
+
+  def onUpDownRestartButton(self):
+    self.upDownRecordButton.enabled = True
+    self.upDownStopButton.enabled = False
+    self.upDownRestartButton.enabled = False
+    
+
+  def onRollRecordButton(self):
+    self.rollRecordButton.enabled = False
+    self.rollStopButton.enabled = True
+    self.rollRestartButton.enabled = False
+    
+  def onRollStopButton(self):
+    self.rollRecordButton.enabled = False
+    self.rollStopButton.enabled = False
+    self.rollRestartButton.enabled = True
+
+  def onRollRestartButton(self):
+    self.rollRecordButton.enabled = True
+    self.rollStopButton.enabled = False
+    self.rollRestartButton.enabled = False
 
 #
 # SordinaLIACGuidanceLogic
