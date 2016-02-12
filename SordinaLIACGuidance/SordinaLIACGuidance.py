@@ -50,31 +50,31 @@ class SordinaLIACGuidanceWidget(ScriptedLoadableModuleWidget):
     self.layout.addWidget(transformsCollapsibleButton)
     parametersFormLayout = qt.QFormLayout(transformsCollapsibleButton)
 
-    # PointerTipToPointer transform selector
-    self.pointerTipToPointerSelector = slicer.qMRMLNodeComboBox()
-    self.pointerTipToPointerSelector.nodeTypes = ( ("vtkMRMLLinearTransformNode"), "" )
-    self.pointerTipToPointerSelector.selectNodeUponCreation = True
-    self.pointerTipToPointerSelector.addEnabled = False
-    self.pointerTipToPointerSelector.removeEnabled = False
-    self.pointerTipToPointerSelector.noneEnabled = False
-    self.pointerTipToPointerSelector.showHidden = False
-    self.pointerTipToPointerSelector.showChildNodeTypes = False
-    self.pointerTipToPointerSelector.setMRMLScene( slicer.mrmlScene )
-    self.pointerTipToPointerSelector.setToolTip( "Pick the PointerTipToPointer transform." )
-    parametersFormLayout.addRow("PointerTipToPointer transform: ", self.pointerTipToPointerSelector)
+    # ApplicatorToTracker transform selector
+    self.applicatorToTrackerSelector = slicer.qMRMLNodeComboBox()
+    self.applicatorToTrackerSelector.nodeTypes = ( ("vtkMRMLLinearTransformNode"), "" )
+    self.applicatorToTrackerSelector.selectNodeUponCreation = True
+    self.applicatorToTrackerSelector.addEnabled = False
+    self.applicatorToTrackerSelector.removeEnabled = False
+    self.applicatorToTrackerSelector.noneEnabled = False
+    self.applicatorToTrackerSelector.showHidden = False
+    self.applicatorToTrackerSelector.showChildNodeTypes = False
+    self.applicatorToTrackerSelector.setMRMLScene( slicer.mrmlScene )
+    self.applicatorToTrackerSelector.setToolTip( "Pick the applicatorToTracker transform." )
+    parametersFormLayout.addRow("ApplicatorToTracker transform: ", self.applicatorToTrackerSelector)
  
-    # NeedleTipToNeedle transform selector
-    self.needleTipToNeedleSelector = slicer.qMRMLNodeComboBox()
-    self.needleTipToNeedleSelector.nodeTypes = ( ("vtkMRMLLinearTransformNode"), "" )
-    self.needleTipToNeedleSelector.selectNodeUponCreation = True
-    self.needleTipToNeedleSelector.addEnabled = False
-    self.needleTipToNeedleSelector.removeEnabled = False
-    self.needleTipToNeedleSelector.noneEnabled = False
-    self.needleTipToNeedleSelector.showHidden = False
-    self.needleTipToNeedleSelector.showChildNodeTypes = False
-    self.needleTipToNeedleSelector.setMRMLScene( slicer.mrmlScene )
-    self.needleTipToNeedleSelector.setToolTip( "Pick the NeedleTipToNeedle transform." )
-    parametersFormLayout.addRow("NeedleTipToNeedle transform: ", self.needleTipToNeedleSelector)
+    # LiacToTracker transform selector
+    self.liacToTrackerSelector = slicer.qMRMLNodeComboBox()
+    self.liacToTrackerSelector.nodeTypes = ( ("vtkMRMLLinearTransformNode"), "" )
+    self.liacToTrackerSelector.selectNodeUponCreation = True
+    self.liacToTrackerSelector.addEnabled = False
+    self.liacToTrackerSelector.removeEnabled = False
+    self.liacToTrackerSelector.noneEnabled = False
+    self.liacToTrackerSelector.showHidden = False
+    self.liacToTrackerSelector.showChildNodeTypes = False
+    self.liacToTrackerSelector.setMRMLScene( slicer.mrmlScene )
+    self.liacToTrackerSelector.setToolTip( "Pick the LiacToTracker transform." )
+    parametersFormLayout.addRow("LiacToTracker transform: ", self.liacToTrackerSelector)
 
     ########################################################
     ################## Calibration Area ####################
