@@ -224,16 +224,29 @@ class SordinaLIACGuidanceWidget(ScriptedLoadableModuleWidget):
     self.rollRecordButton.enabled = False
     self.rollStopButton.enabled = True
     self.rollRestartButton.enabled = False
+
+    if not self.SordinaLIACGuidanceLogic.observedNode:
+      self.SordinaLIACGuidanceLogic.resetScene()
+      self.SordinaLIACGuidanceLogic.record=True
+      self.SordinaLIACGuidanceLogic.movementType='Roll'
+      self.SordinaLIACGuidanceLogic.removeUpdateObserver()
+      self.SordinaLIACGuidanceLogic.addUpdateObserver(self.liacToTrackerTransform)
     
   def onRollStopButton(self):
     self.rollRecordButton.enabled = False
     self.rollStopButton.enabled = False
     self.rollRestartButton.enabled = True
 
+    self.SordinaLIACGuidanceLogic.record=False
+    self.SordinaLIACGuidanceLogic.saveData('Roll')
+    self.SordinaLIACGuidanceLogic.observedNode=None
+
   def onRollRestartButton(self):
     self.rollRecordButton.enabled = True
     self.rollStopButton.enabled = False
     self.rollRestartButton.enabled = False
+
+    self.SordinaLIACGuidanceLogic.resetScene()
 
 #
 # SordinaLIACGuidanceLogic
@@ -294,9 +307,9 @@ class SordinaLIACGuidanceLogic(ScriptedLoadableModuleLogic):
         if self.timerActive==False:
             self.myTimer.startTimer()
             self.timerActive=True
-        self.recordPositionsForCalibration(self.observedNode,self.movementType)
-            
-  def recordPositionsForCalibration(self, InputTransformMatrix, movementType):
+        self.recordPositionsForCalibration(self.observedNode)
+
+  def recordPositionsForCalibration(self, InputTransformMatrix):
     print('Recording...')
     # Input tranformation node is saved into a VTK matrix 'm'
     InputTransformMatrix.GetMatrixTransformToParent(self.m)
@@ -309,6 +322,8 @@ class SordinaLIACGuidanceLogic(ScriptedLoadableModuleLogic):
     self.timeStamp=numpy.append(self.timeStamp, t) # Time stamp saved for each iteration.
   
   def saveData(self, movementType):
+    print('Saving data into .csv file...')
+    self.myTimer.stopTimer()
     dateAndTime = time.strftime("_%Y-%m-%d_%H-%M-%S")
     if movementType=='Up-Down':
       path = slicer.modules.sordinaliacguidance.path.replace("SordinaLIACGuidance.py","") + 'SavedData/' + 'CalibrationData_UpDown_' + dateAndTime
