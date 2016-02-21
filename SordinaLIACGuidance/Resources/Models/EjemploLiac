@@ -1,0 +1,96 @@
+import sys
+sys.path.append('../../PyRobotics')
+import SordinaLIAC
+import PyRobotics
+import numpy
+
+liac = SordinaLIAC.LIAC()
+# Number of acquired points
+N = 50
+
+# UpDown simulation
+UpDownVector = numpy.linspace(0,0.89,N) 
+paramsQ = numpy.zeros((N,9))
+paramsQ[:,4] = UpDownVector
+
+# Draw UpDown trajectory
+pUpDown, pointsUpDown = liac.drawTrajectory(paramsQ)
+
+# Roll simulation
+RollVector = numpy.linspace(-60,60,N) # Roll simulation
+paramsQ = numpy.zeros((N,9))
+paramsQ[:,5] = RollVector
+
+# Draw roll trajectory
+pRoll, pointsRoll = liac.drawTrajectory(paramsQ)
+
+figures = list()
+figures.append(pUpDown)
+figures.append(pRoll)
+
+
+# Create cameras axis
+cameraAxisT = PyRobotics.DHtoT(0,45,0,45)
+cameraAxisT[0:3,3] = numpy.array([0.01,0.02,0.9])
+cameraAxis = PyRobotics.createAxisFigureObject(cameraAxisT, s = 0.3)
+for element in cameraAxis:
+    figures.append(element)
+    
+#liac.draw(data = figures,drawAxis = False);
+
+
+Tprojection = numpy.linalg.inv(cameraAxisT)
+
+pointsUpDownCameras = numpy.dot(Tprojection,numpy.hstack((pointsUpDown,numpy.ones((N,1)))).T).T
+pointsRollCameras = numpy.dot(Tprojection,numpy.hstack((pointsRoll,numpy.ones((N,1)))).T).T
+
+
+# Calibration using points
+liac.calibrateOpticalToLIACend(pointsUpDownCameras, pointsRollCameras)
+
+axisNew = PyRobotics.createAxisFigureObject(numpy.dot(cameraAxisT,liac.OpticalToLIACend), s = 0.3)
+
+cameraAxis = PyRobotics.createAxisFigureObject(numpy.dot(liac.JointList[-1].Axis,numpy.linalg.inv(liac.OpticalToLIACend)), s = 0.3)
+
+figures = list()
+figures.append(pUpDown)
+figures.append(pRoll)
+
+for element in cameraAxis:
+    figures.append(element)
+    
+for element in axisNew:
+    figures.append(element)
+    
+#liac.draw(data = figures,drawAxis = False);
+
+print pointsRoll[0:5,:]
+print numpy.dot(numpy.dot(liac.JointList[-1].Axis,numpy.linalg.inv(liac.OpticalToLIACend)),pointsRollCameras[0:5,:].T).T
+
+
+
+
+######
+liac.moveRobot([0.0, 1.7, -20.0, 1.2, 0.5, 0, 15, 0, 0])
+ApplicatorAxisWorld = liac.Joint9.Axis
+ApplicatorAxisCameraFrame = numpy.dot(numpy.linalg.inv(cameraAxisT),ApplicatorAxisWorld)
+liac.SetObjective(ApplicatorAxisCameraFrame)
+
+
+liac.moveRobot([0,0,0,0,0,0,0,0,0])
+#liac.drawVTK()
+
+
+
+
+
+qsol, poseError, angleError = liac.solveObjective(draw = True, animate = True, fold = True)
+
+print qsol
+print "Error pose (mm)" , 1000 * poseError
+print "Error angle (deg)", angleError
+
+
+
+#liac.drawTrajectoryVTK([0,0,0,0,0,0,0,0,0], qsol, animate = True, fold = True)
+

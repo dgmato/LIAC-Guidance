@@ -6,6 +6,9 @@ import logging
 import numpy
 import time, csv
 
+# import SordinaLIAC
+# import PyRobotics
+
 
 #
 # SordinaLIACGuidance
@@ -152,6 +155,25 @@ class SordinaLIACGuidanceWidget(ScriptedLoadableModuleWidget):
     rollMovementLayout.addWidget(self.rollRestartButton)
     # rollMovementGroupBoxFormLayout.addRow(self.rollRestartButton)
 
+    #
+    # Save/load calibration file
+    #
+    self.saveCalibrationButton = qt.QPushButton(" Save Calibration")
+    self.saveCalibrationButton.setIcon(saveIcon)
+    self.saveCalibrationButton.enabled = True
+    self.saveCalibrationButton.adjustSize()
+    
+    self.loadCalibrationButton = qt.QPushButton(" Load Calibration")
+    self.loadCalibrationButton.setIcon(saveIcon)
+    self.loadCalibrationButton.enabled = True
+    self.loadCalibrationButton.adjustSize()
+
+    self.calibrationErrorLabel = qt.QLabel('Calibration error: - mm')
+    self.calibrationErrorLabel.setStyleSheet("QLabel { color : #000000; font: bold}" )
+    
+    parametersFormLayout.addRow(self.loadCalibrationButton, self.saveCalibrationButton)
+    parametersFormLayout.addRow(self.calibrationErrorLabel)  
+    
     #########################################################
     #################### Guidance Area ######################
     #########################################################
@@ -176,6 +198,7 @@ class SordinaLIACGuidanceWidget(ScriptedLoadableModuleWidget):
     self.rollRecordButton.connect('clicked(bool)', self.onRollRecordButton)
     self.rollStopButton.connect('clicked(bool)', self.onRollStopButton)
     self.rollRestartButton.connect('clicked(bool)', self.onRollRestartButton)
+    self.loadModelsButton.connect('clicked(bool)', self.onLoadModelsButton)
     
     self.SordinaLIACGuidanceLogic = SordinaLIACGuidanceLogic()  
 
@@ -247,6 +270,56 @@ class SordinaLIACGuidanceWidget(ScriptedLoadableModuleWidget):
     self.rollRestartButton.enabled = False
 
     self.SordinaLIACGuidanceLogic.resetScene()
+
+  def onLoadModelsButton(self):
+    # Load head model + Apply transform
+    self.applicator1Model = slicer.util.getNode('Applicator1_origin')
+    if not self.applicator1Model:
+        sordinaLIACGuidanceModuleDataPath = slicer.modules.sordinaliacguidance.path.replace("SordinaLIACGuidance.py","") + 'Resources/Models/'
+        slicer.util.loadModel(sordinaLIACGuidanceModuleDataPath + 'Applicator1_origin.stl')
+        self.applicator1Model = slicer.util.getNode(pattern="Applicator1_origin")
+        self.applicator1ModelDisplay=self.applicator1Model.GetModelDisplayNode()
+        self.applicator1ModelDisplay.SetColor([1,0.7,0.53])
+
+    self.applicator2Model = slicer.util.getNode('Applicator2_origin')
+    if not self.applicator2Model:
+        sordinaLIACGuidanceModuleDataPath = slicer.modules.sordinaliacguidance.path.replace("SordinaLIACGuidance.py","") + 'Resources/Models/'
+        slicer.util.loadModel(sordinaLIACGuidanceModuleDataPath + 'Applicator2_origin.stl')
+        self.applicator2Model = slicer.util.getNode(pattern="Applicator2_origin")
+        self.applicator2ModelDisplay=self.applicator2Model.GetModelDisplayNode()
+        self.applicator2ModelDisplay.SetColor([1,0.7,0.53])
+
+    self.armRotateModel = slicer.util.getNode('ArmRotate_origin')
+    if not self.armRotateModel:
+        sordinaLIACGuidanceModuleDataPath = slicer.modules.sordinaliacguidance.path.replace("SordinaLIACGuidance.py","") + 'Resources/Models/'
+        slicer.util.loadModel(sordinaLIACGuidanceModuleDataPath + 'ArmRotate_origin.stl')
+        self.armRotateModel = slicer.util.getNode(pattern="ArmRotate_origin")
+        self.armRotateModelDisplay=self.armRotateModel.GetModelDisplayNode()
+        self.armRotateModelDisplay.SetColor([1,0.7,0.53])
+
+    self.armRotateFrontModel = slicer.util.getNode('ArmRotateFront_origin')
+    if not self.armRotateFrontModel:
+        sordinaLIACGuidanceModuleDataPath = slicer.modules.sordinaliacguidance.path.replace("SordinaLIACGuidance.py","") + 'Resources/Models/'
+        slicer.util.loadModel(sordinaLIACGuidanceModuleDataPath + 'ArmRotateFront_origin.stl')
+        self.armRotateFrontModel = slicer.util.getNode(pattern="ArmRotateFront_origin")
+        self.armRotateFrontModelDisplay=self.armRotateFrontModel.GetModelDisplayNode()
+        self.armRotateFrontModelDisplay.SetColor([1,0.7,0.53])
+
+    self.bodyModel = slicer.util.getNode('Body_origin')
+    if not self.bodyModel:
+        sordinaLIACGuidanceModuleDataPath = slicer.modules.sordinaliacguidance.path.replace("SordinaLIACGuidance.py","") + 'Resources/Models/'
+        slicer.util.loadModel(sordinaLIACGuidanceModuleDataPath + 'Body_origin.stl')
+        self.bodyModel = slicer.util.getNode(pattern="Body_origin")
+        self.bodyModelDisplay=self.bodyModel.GetModelDisplayNode()
+        self.bodyModelDisplay.SetColor([1,0.7,0.53])
+
+    self.elevationModel = slicer.util.getNode('Elevation_origin')
+    if not self.elevationModel:
+        sordinaLIACGuidanceModuleDataPath = slicer.modules.sordinaliacguidance.path.replace("SordinaLIACGuidance.py","") + 'Resources/Models/'
+        slicer.util.loadModel(sordinaLIACGuidanceModuleDataPath + 'Elevation_origin.stl')
+        self.elevationModel = slicer.util.getNode(pattern="Elevation_origin")
+        self.elevationModelDisplay=self.elevationModel.GetModelDisplayNode()
+        self.elevationModelDisplay.SetColor([1,0.7,0.53])
 
 #
 # SordinaLIACGuidanceLogic
